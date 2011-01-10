@@ -8,6 +8,10 @@
 
 package org.maven.ide.eclipse.wtp;
 
+import java.util.Set;
+
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.core.resources.IProject;
@@ -16,7 +20,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.wst.common.componentcore.ModuleCoreNature;
 import org.maven.ide.eclipse.core.MavenLogger;
 import org.maven.ide.eclipse.jdt.IClasspathDescriptor;
-import org.maven.ide.eclipse.jdt.IJavaProjectConfigurator;
+import org.maven.ide.eclipse.jdt.IExtendedJavaProjectConfigurator;
 import org.maven.ide.eclipse.project.IMavenProjectFacade;
 import org.maven.ide.eclipse.project.MavenProjectChangedEvent;
 import org.maven.ide.eclipse.project.configurator.AbstractBuildParticipant;
@@ -28,16 +32,16 @@ import org.maven.ide.eclipse.wtp.filtering.ResourceFilteringBuildParticipant;
 /**
  * Project configurator for WTP projects. Specific project configuration is delegated to the
  * IProjectConfiguratorDelegate bound to a maven packaging type.
- * 
+ *
  * @author Igor Fedorenko
  */
-public class WTPProjectConfigurator extends AbstractProjectConfigurator implements IJavaProjectConfigurator {
+public class WTPProjectConfigurator extends AbstractProjectConfigurator implements IExtendedJavaProjectConfigurator {
 
   @Override
   public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor)
       throws CoreException {
     MavenProject mavenProject = request.getMavenProject();
-    //Lookup the project configurator 
+    //Lookup the project configurator
     IProjectConfiguratorDelegate configuratorDelegate = ProjectConfiguratorDelegateFactory
         .getProjectConfiguratorDelegate(mavenProject.getPackaging());
     if(configuratorDelegate != null) {
@@ -79,10 +83,31 @@ public class WTPProjectConfigurator extends AbstractProjectConfigurator implemen
     return ModuleCoreNature.getModuleCoreNature(project) != null;
   }
 
+  public Set<Artifact> resolveAdditionalArtifacts(IMavenProjectFacade facade, IProgressMonitor monitor) throws CoreException {
+    MavenProject mavenProject = facade.getMavenProject(monitor);
+    IProjectConfiguratorDelegate configuratorDelegate = ProjectConfiguratorDelegateFactory
+        .getProjectConfiguratorDelegate(mavenProject.getPackaging());
+    if(configuratorDelegate != null) {
+      return configuratorDelegate.resolveAdditionalArtifacts(facade, monitor);
+    }
+    return null;
+  }
+
+  public ArtifactFilter getClasspathFilter(IMavenProjectFacade facade,
+      IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
+    MavenProject mavenProject = facade.getMavenProject(monitor);
+    IProjectConfiguratorDelegate configuratorDelegate = ProjectConfiguratorDelegateFactory
+        .getProjectConfiguratorDelegate(mavenProject.getPackaging());
+    if(configuratorDelegate != null) {
+      return configuratorDelegate.getClasspathFilter(classpath);
+    }
+    return null;
+  }
+
   public void configureClasspath(IMavenProjectFacade facade, IClasspathDescriptor classpath, IProgressMonitor monitor)
       throws CoreException {
     MavenProject mavenProject = facade.getMavenProject(monitor);
-    //Lookup the project configurator 
+    //Lookup the project configurator
     IProjectConfiguratorDelegate configuratorDelegate = ProjectConfiguratorDelegateFactory
         .getProjectConfiguratorDelegate(mavenProject.getPackaging());
     if(configuratorDelegate != null) {
@@ -97,7 +122,7 @@ public class WTPProjectConfigurator extends AbstractProjectConfigurator implemen
 
   public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath,
       IProgressMonitor monitor) throws CoreException {
-    // we do not change raw project classpath, do we? 
+    // we do not change raw project classpath, do we?
   }
 
   /* (non-Javadoc)
@@ -106,5 +131,5 @@ public class WTPProjectConfigurator extends AbstractProjectConfigurator implemen
   public AbstractBuildParticipant getBuildParticipant(MojoExecution execution) {
     return ResourceFilteringBuildParticipant.getParticipant(execution);
   }
-  
+
 }

@@ -10,15 +10,19 @@ package org.maven.ide.eclipse.wtp;
 
 /**
  * Enumeration of Maven JEE related packaging types.
- * 
+ *
  * @author Fred Bricon
  */
-//XXX enum should most probably be refactored to another project. 
+//XXX enum should most probably be refactored to another project.
 public enum JEEPackaging {
   /**
    * Web project.
    */
   WAR("war"),
+  /**
+   * Web project.
+   */
+  WAR_OVERLAY("war-overlay"),
   /**
    * Enterprise Java Bean.
    */
@@ -53,7 +57,7 @@ public enum JEEPackaging {
   /**
    * Gets a JEEPackaging from maven packaging name. Supported values are <i>war</i>, <i>ejb</i>, <i>ear</i>,
    * <i>rar</i>.
-   * 
+   *
    * @param packaging of a maven artifact.
    * @return the corresponding JEEPackaging or UNKNOWN if the package type is not supported.
    */
@@ -68,10 +72,10 @@ public enum JEEPackaging {
     }
     return UNKNOWN;
   }
-  
+
   static boolean isJEEPackaging(String packaging) {
     JEEPackaging pkg = getValue(packaging);
-   return !UNKNOWN.equals(pkg);  
+   return !UNKNOWN.equals(pkg);
   }
 
 

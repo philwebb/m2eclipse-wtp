@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -42,6 +43,7 @@ import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
 import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 import org.maven.ide.eclipse.MavenPlugin;
 import org.maven.ide.eclipse.jdt.BuildPathManager;
+import org.maven.ide.eclipse.jdt.IClasspathDescriptor;
 import org.maven.ide.eclipse.project.IMavenMarkerManager;
 import org.maven.ide.eclipse.project.IMavenProjectFacade;
 import org.maven.ide.eclipse.project.MavenProjectManager;
@@ -50,7 +52,7 @@ import org.maven.ide.eclipse.project.MavenProjectUtils;
 
 /**
  * AbstractProjectConfiguratorDelegate
- * 
+ *
  * @author Igor Fedorenko
  * @author Fred Bricon
  */
@@ -68,7 +70,15 @@ abstract class AbstractProjectConfiguratorDelegate implements IProjectConfigurat
     this.projectManager = MavenPlugin.getDefault().getMavenProjectManager();
     this.mavenMarkerManager = MavenPlugin.getDefault().getMavenMarkerManager();
   }
-  
+
+  public Set<Artifact> resolveAdditionalArtifacts(IMavenProjectFacade facade, IProgressMonitor monitor) throws CoreException {
+    return null;
+  }
+
+  public ArtifactFilter getClasspathFilter(IClasspathDescriptor classpath) {
+    return null;
+  }
+
   public void configureProject(IProject project, MavenProject mavenProject, IProgressMonitor monitor) throws MarkedException {
     try {
       mavenMarkerManager.deleteMarkers(project);
@@ -80,7 +90,7 @@ abstract class AbstractProjectConfiguratorDelegate implements IProjectConfigurat
       throw new MarkedException("Unable to configure "+project.getName(), cex);
     }
   }
- 
+
   protected abstract void configure(IProject project, MavenProject mavenProject, IProgressMonitor monitor) throws CoreException;
 
   protected List<IMavenProjectFacade> getWorkspaceDependencies(IProject project, MavenProject mavenProject) {
@@ -90,9 +100,9 @@ abstract class AbstractProjectConfiguratorDelegate implements IProjectConfigurat
     for(Artifact artifact : artifacts) {
       IMavenProjectFacade dependency = projectManager.getMavenProject(artifact.getGroupId(), artifact.getArtifactId(),
           artifact.getVersion());
-      
-      if((Artifact.SCOPE_COMPILE.equals(artifact.getScope()) 
-          || Artifact.SCOPE_RUNTIME.equals(artifact.getScope())) //MNGECLIPSE-1578 Runtime dependencies should be deployed 
+
+      if((Artifact.SCOPE_COMPILE.equals(artifact.getScope())
+          || Artifact.SCOPE_RUNTIME.equals(artifact.getScope())) //MNGECLIPSE-1578 Runtime dependencies should be deployed
           && dependency != null && !dependency.getProject().equals(project) && dependency.getFullPath(artifact.getFile()) != null
           && projects.add(dependency.getProject())) {
         dependencies.add(dependency);
@@ -117,15 +127,15 @@ abstract class AbstractProjectConfiguratorDelegate implements IProjectConfigurat
       actions.add(new IFacetedProject.Action(IFacetedProject.Action.Type.VERSION_CHANGE, WTPProjectsUtil.UTILITY_10,
           null));
     }
-    
+
     if (!actions.isEmpty()) {
-      facetedProject.modify(actions, monitor);      
+      facetedProject.modify(actions, monitor);
     }
-    
+
     //MNGECLIPSE-904 remove tests folder links for utility jars
     //TODO handle modules in a parent pom (the following doesn't work)
     removeTestFolderLinks(project, mavenProject, monitor, "/");
-    
+
     //Remove "library unavailable at runtime" warning.
     setNonDependencyAttributeToContainer(project, monitor);
   }
@@ -173,7 +183,7 @@ abstract class AbstractProjectConfiguratorDelegate implements IProjectConfigurat
         LinkedHashMap<String, IClasspathAttribute> attrs = new LinkedHashMap<String, IClasspathAttribute>();
         for(IClasspathAttribute attr : cp[i].getExtraAttributes()) {
           if (!attr.getName().equals(attributeToDelete)) {
-            attrs.put(attr.getName(), attr);            
+            attrs.put(attr.getName(), attr);
           }
         }
         attrs.put(attributeToAdd.getName(), attributeToAdd);
@@ -217,12 +227,12 @@ javaProject.setRawClasspath(cp, monitor);
 
   @SuppressWarnings("restriction")
   protected void configureDeployedName(IProject project, String deployedFileName) {
-    //We need to remove the file extension from deployedFileName 
+    //We need to remove the file extension from deployedFileName
     int extSeparatorPos  = deployedFileName.lastIndexOf('.');
     String deployedName = extSeparatorPos > -1? deployedFileName.substring(0, extSeparatorPos): deployedFileName;
     //From jerr's patch in MNGECLIPSE-965
     IVirtualComponent projectComponent = ComponentCore.createComponent(project);
-    if(projectComponent != null && !deployedName.equals(projectComponent.getDeployedName())){//MNGECLIPSE-2331 : Seems projectComponent.getDeployedName() can be null 
+    if(projectComponent != null && !deployedName.equals(projectComponent.getDeployedName())){//MNGECLIPSE-2331 : Seems projectComponent.getDeployedName() can be null
       StructureEdit moduleCore = null;
       try {
         moduleCore = StructureEdit.getStructureEditForWrite(project);
@@ -238,12 +248,12 @@ javaProject.setRawClasspath(cp, monitor);
           moduleCore.dispose();
         }
       }
-    }  
+    }
   }
 
   /**
-   * Link a project's file to a specific deployment destination. Existing links will be deleted beforehand. 
-   * @param project 
+   * Link a project's file to a specific deployment destination. Existing links will be deleted beforehand.
+   * @param project
    * @param customFile the existing file to deploy
    * @param targetRuntimePath the target runtime/deployment location of the file
    * @param monitor
@@ -265,7 +275,7 @@ javaProject.setRawClasspath(cp, monitor);
   }
 
   protected boolean hasChanged(IVirtualReference[] existingRefs, IVirtualReference[] refArray) {
-  
+
     if (existingRefs==refArray) {
       return false;
     }
@@ -277,11 +287,11 @@ javaProject.setRawClasspath(cp, monitor);
       IVirtualReference newRef = refArray[i];
       if ((existingRef.getArchiveName() != null && !existingRef.getArchiveName().equals(newRef.getArchiveName())) ||
           !existingRef.getReferencedComponent().equals(newRef.getReferencedComponent()) ||
-          !existingRef.getRuntimePath().equals(newRef.getRuntimePath())) 
+          !existingRef.getRuntimePath().equals(newRef.getRuntimePath()))
       {
-        return true;  
+        return true;
       }
     }
-    return false;    
+    return false;
   }
 }

@@ -10,27 +10,29 @@ package org.maven.ide.eclipse.wtp;
 
 
 /**
- * This factory creates IProjectConfiguratorDelegate based on Maven projects packaging.  
+ * This factory creates IProjectConfiguratorDelegate based on Maven projects packaging.
  *
  * @author Fred Bricon
  */
-//XXX See if we could refactor this to do JEEPackaging.createProjectConfiguratorDelegate() instead. 
+//XXX See if we could refactor this to do JEEPackaging.createProjectConfiguratorDelegate() instead.
 class ProjectConfiguratorDelegateFactory {
 
   private ProjectConfiguratorDelegateFactory() {
     //We don't need to instantiate this class
   }
-   
-  
+
+
   /**
-   * IProjectConfiguratorDelegate factory method.  
+   * IProjectConfiguratorDelegate factory method.
    * @param packaging supported values are war, ejb, ear.
    * @return a new instance of IProjectConfiguratorDelegate or null if packaging is not supported.
    */
   static IProjectConfiguratorDelegate getProjectConfiguratorDelegate(String packaging){
     JEEPackaging mvnPackaging = JEEPackaging.getValue(packaging);
-    
+
     switch(mvnPackaging) {
+      case WAR_OVERLAY:
+        return new WarOverlayProjectConfiguratorDelegate();
       case WAR:
         return new WebProjectConfiguratorDelegate();
       case EJB:
@@ -42,7 +44,7 @@ class ProjectConfiguratorDelegateFactory {
       default :
         return null;
     }
-  
+
   }
-  
+
 }
