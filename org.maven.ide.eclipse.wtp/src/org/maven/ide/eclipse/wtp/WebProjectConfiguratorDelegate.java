@@ -414,6 +414,20 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
         descriptor.addClasspathAttribute(NONDEPENDENCY_ATTRIBUTE);
       }
 
+      //Check for war overlays
+      if("war".equals(descriptor.getType())) {
+        descriptor.addClasspathAttribute(CONSUMED_ATTRIBUTE);
+        descriptor.addClasspathAttribute(ROOT_DEPENDENCY_ATTRIBUTE);
+      }
+      if("war-overlay".equals(descriptor.getType())) {
+        descriptor.addClasspathAttribute(CONSUMED_ATTRIBUTE);
+        if("webcontent".equals(descriptor.getClassifier())) {
+          descriptor.addClasspathAttribute(ROOT_DEPENDENCY_ATTRIBUTE);
+        } else {
+          descriptor.addClasspathAttribute(WEBINFCLASSES_DEPENDENCY_ATTRIBUTE);
+        }
+      }
+
       // collect duplicate file names
       if (!names.add(entry.getPath().lastSegment())) {
         dups.add(entry.getPath().lastSegment());
