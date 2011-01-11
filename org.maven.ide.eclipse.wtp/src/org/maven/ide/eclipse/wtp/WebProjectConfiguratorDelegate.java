@@ -170,6 +170,7 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
 
     if(!actions.isEmpty()) {
       facetedProject.modify(actions, monitor);
+      component = ComponentCore.createComponent(project);
     }
 
     // MNGECLIPSE-632 remove test sources/resources from WEB-INF/classes

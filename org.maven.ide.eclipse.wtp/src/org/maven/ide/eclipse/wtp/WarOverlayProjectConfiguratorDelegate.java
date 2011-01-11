@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jst.j2ee.classpathdep.IClasspathDependencyConstants;
 import org.eclipse.wst.common.componentcore.ComponentCore;
+import org.eclipse.wst.common.componentcore.ModuleCoreNature;
 import org.eclipse.wst.common.componentcore.resources.IVirtualComponent;
 import org.eclipse.wst.common.componentcore.resources.IVirtualFolder;
 import org.maven.ide.eclipse.jdt.IClasspathDescriptor;
@@ -40,6 +41,7 @@ class WarOverlayProjectConfiguratorDelegate extends AbstractProjectConfiguratorD
     //Reconfigure the project
     IVirtualComponent component = ComponentCore.createComponent(project);
     if(component != null) {
+      ModuleCoreNature.addModuleCoreNatureIfNecessary(project, monitor);
       IVirtualFolder rootVirtualFolder = component.getRootFolder().getFolder("/");
 
       //Remove all the default links
@@ -56,18 +58,20 @@ class WarOverlayProjectConfiguratorDelegate extends AbstractProjectConfiguratorD
         }
       }
 
-      //Add a link to the source
-      WarPluginConfiguration config = new WarPluginConfiguration(mavenProject, project);
-      String warSourceDirectory = config.getWarSourceDirectory();
-      rootVirtualFolder.createLink(new Path(warSourceDirectory), 0, monitor);
+      if(ModuleCoreNature.getModuleCoreNature(project) != null) {
+        //Add a link to the source
+        WarPluginConfiguration config = new WarPluginConfiguration(mavenProject, project);
+        String warSourceDirectory = config.getWarSourceDirectory();
+        rootVirtualFolder.createLink(new Path(warSourceDirectory), 0, monitor);
 
-      //Add a link to the classes
-      IPath outputLocationPath = MavenProjectUtils.getProjectRelativePath(project, mavenProject.getBuild()
-          .getOutputDirectory());
-      //this.outputLocation = (path != null) ? fullPath.append(path) : null;
-      IVirtualFolder webInfClassesFolder = rootVirtualFolder
-          .getFolder(IClasspathDependencyConstants.WEB_INF_CLASSES_PATH);
-      webInfClassesFolder.createLink(outputLocationPath, 0, monitor);
+        //Add a link to the classes
+        IPath outputLocationPath = MavenProjectUtils.getProjectRelativePath(project, mavenProject.getBuild()
+            .getOutputDirectory());
+        //this.outputLocation = (path != null) ? fullPath.append(path) : null;
+        IVirtualFolder webInfClassesFolder = rootVirtualFolder
+            .getFolder(IClasspathDependencyConstants.WEB_INF_CLASSES_PATH);
+        webInfClassesFolder.createLink(outputLocationPath, 0, monitor);
+      }
     }
   }
 
