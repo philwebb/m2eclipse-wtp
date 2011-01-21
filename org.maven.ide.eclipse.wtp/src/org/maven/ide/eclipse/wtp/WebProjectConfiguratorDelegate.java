@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
@@ -74,6 +75,8 @@ import org.maven.ide.eclipse.wtp.internal.ExtensionReader;
 @SuppressWarnings("restriction")
 class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate {
 
+  private static boolean CLASSPATH_PROJECT_SUPPORT = true;
+
   /**
    * See http://wiki.eclipse.org/ClasspathEntriesPublishExportSupport
    */
@@ -106,10 +109,11 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
     Set<Artifact> rtn = new LinkedHashSet<Artifact>();
     IMaven maven = MavenPlugin.getDefault().getMaven();
     MavenProject mavenProject = facade.getMavenProject(monitor);
+    List<ArtifactRepository> artifactRepositories = maven.getArtifactRepositories();
     for(Artifact artifact : mavenProject.getArtifacts()) {
       if("war-overlay".equals(artifact.getType()))
       {
-        Artifact contentArtifact = maven.resolve(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), artifact.getType(), "webcontent", null, monitor);
+        Artifact contentArtifact = maven.resolve(artifact.getGroupId(), artifact.getArtifactId(), artifact.getBaseVersion(), artifact.getType(), "webcontent", artifactRepositories, monitor);
         if(contentArtifact != null) {
           rtn.add(contentArtifact);
         }
@@ -274,7 +278,7 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
       }
 
       //an artifact in mavenProject.getArtifacts() doesn't have the "optional" value as depMavenProject.getArtifact();
-      if (!artifact.isOptional()) {
+      if (!artifact.isOptional() && !CLASSPATH_PROJECT_SUPPORT) {
         IVirtualReference reference = ComponentCore.createReference(component, depComponent);
         String artifactType = depMavenProject.getArtifact().getType();
         if("war".equals(artifactType) || "war-overlay".equals(artifactType)) {
@@ -385,7 +389,7 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
           manifestCp.append(component.getDeployedName()).append(".").append(extension);
         }
 
-        if (!descriptor.isOptionalDependency() || usedInEar) {
+        if ((!descriptor.isOptionalDependency() && !CLASSPATH_PROJECT_SUPPORT) || usedInEar) {
           // remove mandatory project dependency from classpath
           iter.remove();
           continue;
@@ -411,7 +415,7 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
       // Check the scope & set WTP non-dependency as appropriate
       // Optional artifact shouldn't be deployed
       if(Artifact.SCOPE_PROVIDED.equals(scope) || Artifact.SCOPE_TEST.equals(scope)
-          || Artifact.SCOPE_SYSTEM.equals(scope) || descriptor.isOptionalDependency()) {
+          || Artifact.SCOPE_SYSTEM.equals(scope) || (descriptor.isOptionalDependency() && !CLASSPATH_PROJECT_SUPPORT)) {
         descriptor.addClasspathAttribute(NONDEPENDENCY_ATTRIBUTE);
       }
 
@@ -422,12 +426,17 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
       }
       if("war-overlay".equals(descriptor.getType())) {
         descriptor.addClasspathAttribute(CONSUMED_ATTRIBUTE);
-        if("webcontent".equals(descriptor.getClassifier())) {
+        if(IClasspathEntry.CPE_PROJECT == entry.getEntryKind()) {
           descriptor.addClasspathAttribute(ROOT_DEPENDENCY_ATTRIBUTE);
         } else {
-          descriptor.addClasspathAttribute(WEBINFCLASSES_DEPENDENCY_ATTRIBUTE);
+          if("webcontent".equals(descriptor.getClassifier())) {
+            descriptor.addClasspathAttribute(ROOT_DEPENDENCY_ATTRIBUTE);
+          } else {
+            descriptor.addClasspathAttribute(WEBINFCLASSES_DEPENDENCY_ATTRIBUTE);
+          }
         }
       }
+
 
       // collect duplicate file names
       if (!names.add(entry.getPath().lastSegment())) {

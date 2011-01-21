@@ -29,113 +29,113 @@ import org.maven.ide.eclipse.tests.common.AbstractMavenProjectTestCase;
 
 
 public class WTPProjectImportTest extends AbstractMavenProjectTestCase {
-
-  public void testProjectImportDefault() throws Exception {
-    deleteProject("MNGECLIPSE-20");
-    deleteProject("MNGECLIPSE-20-app");
-    deleteProject("MNGECLIPSE-20-ear");
-    deleteProject("MNGECLIPSE-20-ejb");
-    deleteProject("MNGECLIPSE-20-type");
-    deleteProject("MNGECLIPSE-20-web");
-
-    ResolverConfiguration configuration = new ResolverConfiguration();
-    IProject[] projects = importProjects("projects/MNGECLIPSE-20", new String[] {"pom.xml", "type/pom.xml",
-        "app/pom.xml", "web/pom.xml", "ejb/pom.xml", "ear/pom.xml",}, configuration);
-
-    waitForJobsToComplete();
-
-    {
-      IJavaProject javaProject = JavaCore.create(projects[1]);
-      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
-          .getClasspathEntries();
-      assertEquals(0, classpathEntries.length);
-
-      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
-      assertEquals(Arrays.toString(rawClasspath), 4, rawClasspath.length);
-      assertEquals("/MNGECLIPSE-20-type/src/main/java", rawClasspath[0].getPath().toString());
-      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[1].getPath().toString());
-      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[2].getPath().toString());
-
-      IMarker[] markers = projects[1].findMarkers(null, true, IResource.DEPTH_INFINITE);
-      assertEquals(toString(markers), 0, markers.length);
-    }
-
-    {
-      IJavaProject javaProject = JavaCore.create(projects[2]);
-      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
-          .getClasspathEntries();
-      assertEquals(3, classpathEntries.length);
-      assertEquals("MNGECLIPSE-20-type", classpathEntries[0].getPath().lastSegment());
-      assertEquals("log4j-1.2.13.jar", classpathEntries[1].getPath().lastSegment());
-      assertEquals("junit-3.8.1.jar", classpathEntries[2].getPath().lastSegment());
-
-      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
-      assertEquals(4, rawClasspath.length);
-      assertEquals("/MNGECLIPSE-20-app/src/main/java", rawClasspath[0].getPath().toString());
-      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[1].getPath().toString());
-      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[2].getPath().toString());
-
-      IMarker[] markers = projects[2].findMarkers(null, true, IResource.DEPTH_INFINITE);
-      assertEquals(toString(markers), 0, markers.length);
-    }
-
-    {
-      IJavaProject javaProject = JavaCore.create(projects[3]);
-      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
-          .getClasspathEntries();
-      assertEquals(1, classpathEntries.length);
-      assertEquals("log4j-1.2.13.jar", classpathEntries[0].getPath().lastSegment());
-
-      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
-      assertEquals(Arrays.asList(rawClasspath).toString(), 5, rawClasspath.length);
-      assertEquals("/MNGECLIPSE-20-web/src/main/java", rawClasspath[0].getPath().toString());
-      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[1].getPath().toString());
-      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[2].getPath().toString());
-
-      IMarker[] markers = projects[3].findMarkers(null, true, IResource.DEPTH_INFINITE);
-      assertEquals(toString(markers), 0, markers.length);
-    }
-
-    {
-      IJavaProject javaProject = JavaCore.create(projects[4]);
-      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
-          .getClasspathEntries();
-      assertEquals(3, classpathEntries.length);
-      assertEquals("MNGECLIPSE-20-app", classpathEntries[0].getPath().lastSegment());
-      assertEquals("log4j-1.2.13.jar", classpathEntries[1].getPath().lastSegment());
-      assertEquals("MNGECLIPSE-20-type", classpathEntries[2].getPath().lastSegment());
-
-      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
-      assertEquals(Arrays.asList(rawClasspath).toString(), 5, rawClasspath.length);
-      assertEquals("/MNGECLIPSE-20-ejb/src/main/java", rawClasspath[0].getPath().toString());
-      assertEquals("/MNGECLIPSE-20-ejb/src/main/resources", rawClasspath[1].getPath().toString());
-      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[2].getPath().toString());
-      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[3].getPath().toString());
-      assertEquals("org.eclipse.jst.j2ee.internal.module.container", rawClasspath[4].getPath().toString());//Added w/ MNGECLIPSE-688
-      
-      IMarker[] markers = projects[4].findMarkers(null, true, IResource.DEPTH_INFINITE);
-      assertEquals(toString(markers), 0, markers.length);
-    }
-
-    {
-      IJavaProject javaProject = JavaCore.create(projects[5]);
-      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
-          .getClasspathEntries();
-      assertEquals(4, classpathEntries.length);
-      assertEquals("MNGECLIPSE-20-ejb", classpathEntries[0].getPath().lastSegment());
-      assertEquals("MNGECLIPSE-20-app", classpathEntries[1].getPath().lastSegment());
-      assertEquals("log4j-1.2.13.jar", classpathEntries[2].getPath().lastSegment());
-      assertEquals("MNGECLIPSE-20-type", classpathEntries[3].getPath().lastSegment());
-
-      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
-      assertEquals(Arrays.asList(rawClasspath).toString(), 2, rawClasspath.length);
-      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.4", rawClasspath[0].getPath().toString());
-      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[1].getPath().toString());
-
-      IMarker[] markers = projects[5].findMarkers(null, true, IResource.DEPTH_INFINITE);
-      assertEquals(toString(markers), 0, markers.length);
-    }
-  }
+//
+//  public void testProjectImportDefault() throws Exception {
+//    deleteProject("MNGECLIPSE-20");
+//    deleteProject("MNGECLIPSE-20-app");
+//    deleteProject("MNGECLIPSE-20-ear");
+//    deleteProject("MNGECLIPSE-20-ejb");
+//    deleteProject("MNGECLIPSE-20-type");
+//    deleteProject("MNGECLIPSE-20-web");
+//
+//    ResolverConfiguration configuration = new ResolverConfiguration();
+//    IProject[] projects = importProjects("projects/MNGECLIPSE-20", new String[] {"pom.xml", "type/pom.xml",
+//        "app/pom.xml", "web/pom.xml", "ejb/pom.xml", "ear/pom.xml",}, configuration);
+//
+//    waitForJobsToComplete();
+//
+//    {
+//      IJavaProject javaProject = JavaCore.create(projects[1]);
+//      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
+//          .getClasspathEntries();
+//      assertEquals(0, classpathEntries.length);
+//
+//      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+//      assertEquals(Arrays.toString(rawClasspath), 4, rawClasspath.length);
+//      assertEquals("/MNGECLIPSE-20-type/src/main/java", rawClasspath[0].getPath().toString());
+//      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[1].getPath().toString());
+//      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[2].getPath().toString());
+//
+//      IMarker[] markers = projects[1].findMarkers(null, true, IResource.DEPTH_INFINITE);
+//      assertEquals(toString(markers), 0, markers.length);
+//    }
+//
+//    {
+//      IJavaProject javaProject = JavaCore.create(projects[2]);
+//      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
+//          .getClasspathEntries();
+//      assertEquals(3, classpathEntries.length);
+//      assertEquals("MNGECLIPSE-20-type", classpathEntries[0].getPath().lastSegment());
+//      assertEquals("log4j-1.2.13.jar", classpathEntries[1].getPath().lastSegment());
+//      assertEquals("junit-3.8.1.jar", classpathEntries[2].getPath().lastSegment());
+//
+//      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+//      assertEquals(4, rawClasspath.length);
+//      assertEquals("/MNGECLIPSE-20-app/src/main/java", rawClasspath[0].getPath().toString());
+//      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[1].getPath().toString());
+//      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[2].getPath().toString());
+//
+//      IMarker[] markers = projects[2].findMarkers(null, true, IResource.DEPTH_INFINITE);
+//      assertEquals(toString(markers), 0, markers.length);
+//    }
+//
+//    {
+//      IJavaProject javaProject = JavaCore.create(projects[3]);
+//      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
+//          .getClasspathEntries();
+//      assertEquals(1, classpathEntries.length);
+//      assertEquals("log4j-1.2.13.jar", classpathEntries[0].getPath().lastSegment());
+//
+//      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+//      assertEquals(Arrays.asList(rawClasspath).toString(), 5, rawClasspath.length);
+//      assertEquals("/MNGECLIPSE-20-web/src/main/java", rawClasspath[0].getPath().toString());
+//      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[1].getPath().toString());
+//      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[2].getPath().toString());
+//
+//      IMarker[] markers = projects[3].findMarkers(null, true, IResource.DEPTH_INFINITE);
+//      assertEquals(toString(markers), 0, markers.length);
+//    }
+//
+//    {
+//      IJavaProject javaProject = JavaCore.create(projects[4]);
+//      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
+//          .getClasspathEntries();
+//      assertEquals(3, classpathEntries.length);
+//      assertEquals("MNGECLIPSE-20-app", classpathEntries[0].getPath().lastSegment());
+//      assertEquals("log4j-1.2.13.jar", classpathEntries[1].getPath().lastSegment());
+//      assertEquals("MNGECLIPSE-20-type", classpathEntries[2].getPath().lastSegment());
+//
+//      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+//      assertEquals(Arrays.asList(rawClasspath).toString(), 5, rawClasspath.length);
+//      assertEquals("/MNGECLIPSE-20-ejb/src/main/java", rawClasspath[0].getPath().toString());
+//      assertEquals("/MNGECLIPSE-20-ejb/src/main/resources", rawClasspath[1].getPath().toString());
+//      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5", rawClasspath[2].getPath().toString());
+//      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[3].getPath().toString());
+//      assertEquals("org.eclipse.jst.j2ee.internal.module.container", rawClasspath[4].getPath().toString());//Added w/ MNGECLIPSE-688
+//
+//      IMarker[] markers = projects[4].findMarkers(null, true, IResource.DEPTH_INFINITE);
+//      assertEquals(toString(markers), 0, markers.length);
+//    }
+//
+//    {
+//      IJavaProject javaProject = JavaCore.create(projects[5]);
+//      IClasspathEntry[] classpathEntries = BuildPathManager.getMaven2ClasspathContainer(javaProject)
+//          .getClasspathEntries();
+//      assertEquals(4, classpathEntries.length);
+//      assertEquals("MNGECLIPSE-20-ejb", classpathEntries[0].getPath().lastSegment());
+//      assertEquals("MNGECLIPSE-20-app", classpathEntries[1].getPath().lastSegment());
+//      assertEquals("log4j-1.2.13.jar", classpathEntries[2].getPath().lastSegment());
+//      assertEquals("MNGECLIPSE-20-type", classpathEntries[3].getPath().lastSegment());
+//
+//      IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+//      assertEquals(Arrays.asList(rawClasspath).toString(), 2, rawClasspath.length);
+//      assertEquals("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.4", rawClasspath[0].getPath().toString());
+//      assertEquals("org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER", rawClasspath[1].getPath().toString());
+//
+//      IMarker[] markers = projects[5].findMarkers(null, true, IResource.DEPTH_INFINITE);
+//      assertEquals(toString(markers), 0, markers.length);
+//    }
+//  }
 
   public void testProjectImportNoWorkspaceResolution() throws Exception {
     deleteProject("MNGECLIPSE-20");
@@ -149,14 +149,14 @@ public class WTPProjectImportTest extends AbstractMavenProjectTestCase {
     configuration.setResolveWorkspaceProjects(false);
     configuration.setActiveProfiles("");
 
-    IProject[] projects = importProjects("projects/MNGECLIPSE-20", 
+    IProject[] projects = importProjects("projects/MNGECLIPSE-20",
         new String[] {
-            "pom.xml", 
+            "pom.xml",
             "type/pom.xml",
-            "app/pom.xml", 
-            "web/pom.xml", 
-            "ejb/pom.xml", 
-            "ear/pom.xml"}, 
+            "app/pom.xml",
+            "web/pom.xml",
+            "ejb/pom.xml",
+            "ear/pom.xml"},
         configuration);
 
     waitForJobsToComplete();
@@ -287,11 +287,11 @@ public class WTPProjectImportTest extends AbstractMavenProjectTestCase {
         "project2/pom.xml", "project3/pom.xml", "project4/pom.xml", "project5/pom.xml",}, new ResolverConfiguration());
 
     waitForJobsToComplete();
-    
+
     assertEquals(projects.length, 6);
     for (IProject project : projects)
     {
-      assertMarkers(project, 0);    
+      assertMarkers(project, 0);
     }
   }
 
@@ -305,13 +305,13 @@ public class WTPProjectImportTest extends AbstractMavenProjectTestCase {
         "project2-war/pom.xml", "project3-jar/pom.xml"}, new ResolverConfiguration());
 
     waitForJobsToComplete();
-    
+
     assertEquals(projects.length, 4);
     for (IProject project : projects)
     {
-      assertMarkers(project, 0);    
+      assertMarkers(project, 0);
     }
-    
+
     IFacetedProject jarUtilityProject = ProjectFacetsManager.create(projects[3]);
     assertNotNull(jarUtilityProject);
     assertTrue(jarUtilityProject.hasProjectFacet(JavaFacetUtils.JAVA_FACET));

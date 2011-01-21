@@ -47,7 +47,7 @@ import org.maven.ide.eclipse.wtp.internal.MavenWtpPlugin;
 
 /**
  * Deployment Descriptor Management based on maven-ear-plugin
- * 
+ *
  * @author Fred Bricon
  * @author Snjezana Peco
  */
@@ -55,7 +55,7 @@ public class MavenDeploymentDescriptorManagement implements DeploymentDescriptor
 
   private final VersionRange VALID_EAR_PLUGIN_RANGE = VersionRange.createFromVersion("2.4.3");
 
-  
+
   private static final IOverwriteQuery OVERWRITE_ALL_QUERY = new IOverwriteQuery() {
     public String queryOverwrite(String pathString) {
       return IOverwriteQuery.ALL;
@@ -65,7 +65,7 @@ public class MavenDeploymentDescriptorManagement implements DeploymentDescriptor
   /**
    * Executes ear:generate-application-xml goal to generate application.xml (and jboss-app.xml if needed). Existing
    * files will be overwritten.
-   * 
+   *
    * @throws CoreException
    */
 
@@ -116,12 +116,12 @@ public class MavenDeploymentDescriptorManagement implements DeploymentDescriptor
         mavenFacade.getResolverConfiguration(), monitor);
     MavenSession session = maven.createSession(request, mavenProject);
 
-    //Execute our hacked mojo 
+    //Execute our hacked mojo
     maven.execute(session, genConfigMojo, monitor);
 
     //Copy generated files to their final location
     File[] files = generatedDescriptorLocation.listFiles();
-    if(files.length > 0) {
+    if(files != null && files.length > 0) {
       List<File> filesToImport = new ArrayList<File>();
       for(int i = 0; i < files.length; i++ ) {
         filesToImport.add(files[i]);
@@ -148,7 +148,7 @@ public class MavenDeploymentDescriptorManagement implements DeploymentDescriptor
       modules = new Xpp3Dom("modules");
       configuration.addChild(modules);
     }
-    //TODO find a more elegant way to clear the modules  
+    //TODO find a more elegant way to clear the modules
     while(modules.getChildCount() > 0) {
       modules.removeChild(0);
     }
