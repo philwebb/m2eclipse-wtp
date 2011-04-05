@@ -291,9 +291,15 @@ class WebProjectConfiguratorDelegate extends AbstractProjectConfiguratorDelegate
       }
     }
 
-
     IVirtualReference[] newRefs = references.toArray(new IVirtualReference[references.size()]);
-    if (hasChanged(component.getReferences(), newRefs)){
+    IVirtualReference[] existingRefs;
+    try {
+       existingRefs  = component.getReferences();
+    } catch (Exception e) {
+      //Ignore failures at this point
+      existingRefs = null;
+    }
+    if (hasChanged(existingRefs, newRefs)){
       //Only write in the .component file if necessary
       component.setReferences(newRefs);
     }
